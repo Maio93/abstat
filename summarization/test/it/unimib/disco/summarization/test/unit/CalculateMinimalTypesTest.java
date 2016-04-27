@@ -25,6 +25,6 @@ public class CalculateMinimalTypesTest extends TestWithTemporaryData{
 				temporary.path()
 		});
 		
-		assertThat(temporary.files("_minType.txt").length, equalTo(2));
+ 		assertThat(temporary.files("_minType.txt").length, equalTo(2));
 	}
 }
