@@ -34,4 +34,5 @@ public class TextInput implements InputFile{
 	public InputFile reopen() throws Exception {
 		return new TextInput(new FileSystemConnector(new File(name())));
 	}
+	
 }

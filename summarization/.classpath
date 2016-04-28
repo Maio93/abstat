@@ -52,13 +52,10 @@
 	<classpathentry kind="lib" path="lib/jetty-all-9.2.9.v20150224.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.jgit.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api.jar"/>
-	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+	<classpathentry exported="true" kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/home/fabio/Scrivania/Stage/Fork_abstat/abstat/summarization/lib/jackson-databind-2.4.4.jar"/>
-	<classpathentry kind="lib" path="/home/fabio/Scrivania/Stage/Fork_abstat/abstat/summarization/lib/jackson-core-2.4.4.jar"/>
-	<classpathentry kind="lib" path="/home/fabio/Scrivania/Stage/Fork_abstat/abstat/summarization/lib/jackson-annotations-2.4.4.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
