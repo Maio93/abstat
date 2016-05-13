@@ -17,12 +17,12 @@ public class HDFS {
 
 	public HDFS (InputFile file) {
 		this.file = file;
-		hadoopPath = "hdfs://localhost:54310/tmp";
+		hadoopPath = "hdfs://master:54310/tmp";
 		conf = new Configuration();
 	}
 	
 	public String createHadoopCopy() throws IOException, URISyntaxException {
-		fs = FileSystem.get(new URI("hdfs://localhost:54310"), conf);
+		fs = FileSystem.get(new URI("hdfs://master:54310"), conf);
 		fs.createNewFile(new Path(hadoopPath));
 		fs.copyFromLocalFile(new Path(file.name()), new Path(hadoopPath));
 		return hadoopPath;

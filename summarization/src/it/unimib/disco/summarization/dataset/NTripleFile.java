@@ -51,6 +51,7 @@ public class NTripleFile {
 		 */
 		if (file.hasNextLine()) {
 			sc = new JavaSparkContext(conf);
+			sc.setLocalProperty("spark.driver.allowMultipleContexts", "true");
 			HDFS hdfs = new HDFS(file);
 			try {
 

@@ -41,21 +41,47 @@
 	<classpathentry kind="lib" path="lib/system-rules-1.8.0.jar"/>
 	<classpathentry kind="lib" path="lib/httpmime-4.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/noggit-0.6.jar"/>
-	<classpathentry kind="lib" path="lib/commons-math3-3.2.jar"/>
-	<classpathentry kind="lib" path="lib/joda-time-2.7.jar"/>
 	<classpathentry kind="lib" path="lib/jena-arq-2.13.0.jar"/>
 	<classpathentry kind="lib" path="lib/jena-core-2.13.0.jar"/>
 	<classpathentry kind="lib" path="lib/httpclient-4.2.6.jar"/>
 	<classpathentry kind="lib" path="lib/httpcore-4.2.5.jar"/>
 	<classpathentry kind="lib" path="lib/solr-solrj-4.2.0.jar"/>
-	<classpathentry kind="lib" path="lib/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-all-9.2.9.v20150224.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.jgit.jar"/>
+	<classpathentry kind="lib" path="lib/spark-core_2.10-1.6.0.jar"/>
+	<classpathentry kind="lib" path="lib/scala-library-2.10.5.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.17.jar"/>
+	<classpathentry kind="lib" path="lib/slf4j-api-1.7.6.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-annotations-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-common-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-hdfs-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-mapreduce-client-common-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-mapreduce-client-core-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-mapreduce-client-hs-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-mapreduce-client-hs-plugins-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-mapreduce-client-jobclient-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-mapreduce-client-shuffle-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-api-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-applications-distributedshell-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-applications-unmanaged-am-launcher-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-client-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-common-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-registry-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-server-applicationhistoryservice-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-server-common-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-server-nodemanager-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/hadoop-yarn-server-resourcemanager-2.6.4.jar"/>
+	<classpathentry kind="lib" path="lib/joda-time-2.9.2.jar"/>
+	<classpathentry kind="lib" path="lib/spark-1.6.1-yarn-shuffle.jar"/>
+	<classpathentry kind="lib" path="lib/sparktestjar_2.10-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-databind-2.4.4.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api.jar"/>
-	<classpathentry exported="true" kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="lib" path="lib/slf4j-log4j12-1.7.6.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-math3-3.2.jar"/>
+	<classpathentry kind="lib" path="lib/guava-11.0.2.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-annotations-2.4.4.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-2.4.4.jar"/>
+	<classpathentry kind="lib" path="lib/spark-assembly-1.6.1-hadoop2.6.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

@@ -18,7 +18,7 @@ echo "Building the content of $directory to $jar"
 cd $project
 rm -rf $classes_directory
 mkdir -p $classes_directory
-javac -encoding utf8 -cp .:'lib/*' $(find ./* | grep '\.java') -d $classes_directory
+javac -encoding utf8 -cp .:'lib/*' $(find ./* | grep '\.java') -d $classes_directory -Xlint:deprecation
 cd $classes_directory
 for file in $(find ../../lib/* | grep .jar)
 do
