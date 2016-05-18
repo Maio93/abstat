@@ -55,15 +55,15 @@ public class NTripleFile {
 			HDFS hdfs = new HDFS(file);
 			try {
 
-				// String path = file.name();
+				 String path = file.name();
 
-				String path = hdfs.createHadoopCopy();
+				//String path = hdfs.createHadoopCopy();
 				JavaRDD<String> lines = sc.textFile(path);
 
 				JavaRDD<Statement> statements = calculate_statements(lines);
 				analysis_statements(statements);
 
-				hdfs.deleteHadoopCopy();
+				//hdfs.deleteHadoopCopy();
 			} catch (Exception e) {
 				Events.summarization().error("error processing a line from " + file.name(), e);
 			}

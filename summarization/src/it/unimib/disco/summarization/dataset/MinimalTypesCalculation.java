@@ -64,16 +64,16 @@ public class MinimalTypesCalculation implements Processing {
 		sc.setLocalProperty("spark.driver.allowMultipleContexts", "true");
 		HDFS hdfs = new HDFS(types);
 		try {
-			// String path = types.name();
+			String path = types.name();
 
 			if (types.hasNextLine()) {
-				String path = hdfs.createHadoopCopy();
+				//String path = hdfs.createHadoopCopy();
 				JavaRDD<String> file = sc.textFile(path);
 
 				trackConcept(file, conceptCounts, externalConcepts);
 				minimalTypes = trackMinimalType(file);
 
-				hdfs.deleteHadoopCopy();
+				//hdfs.deleteHadoopCopy();
 			}
 		} catch (Exception e) {
 			Events.summarization().error("error processing " + types.name(), e);
