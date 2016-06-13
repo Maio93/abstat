@@ -26,9 +26,13 @@ import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.vocabulary.OWL;
 
-import org.apache.spark.*;
-import org.apache.spark.api.java.*;
-import org.apache.spark.api.java.function.*;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.PairFunction;
 
 public class MinimalTypesCalculation implements Processing {
 
@@ -36,8 +40,8 @@ public class MinimalTypesCalculation implements Processing {
 	private Concepts concepts;
 	private List<String> subclassRelations;
 	private File targetDirectory;
-	private SparkConf conf;
 	private JavaSparkContext sc;
+	//private SparkConf conf;
 
 	public MinimalTypesCalculation(OntModel ontology, File targetDirectory) throws Exception {
 		Concepts concepts = extractConcepts(ontology);
@@ -45,9 +49,9 @@ public class MinimalTypesCalculation implements Processing {
 		this.targetDirectory = targetDirectory;
 		this.concepts = concepts;
 		MinimalTypesCalculation.graph = new TypeGraph(concepts, subclassRelations);
-
-		conf = new SparkConf().setAppName("Summarization").setMaster("local[4]")
-				.set("spark.driver.allowMultipleContexts", "true");
+		
+		//conf = new SparkConf().set("spark.driver.allowMultipleContexts", "true");
+		//conf.setMaster("local[4]").setAppName("summarization");
 	}
 
 	@Override
@@ -60,15 +64,15 @@ public class MinimalTypesCalculation implements Processing {
 		List<String> externalConcepts = new ArrayList<String>();
 		Map<String, HashSet<String>> minimalTypes = new HashMap<String, HashSet<String>>();
 
-		sc = new JavaSparkContext(conf);
-		sc.setLocalProperty("spark.driver.allowMultipleContexts", "true");
-		HDFS hdfs = new HDFS(types);
+		sc = new JavaSparkContext(new SparkConf());
+		//HDFS hdfs = new HDFS(types);
 		try {
 			String path = types.name();
-
+			
 			if (types.hasNextLine()) {
 				//String path = hdfs.createHadoopCopy();
-				JavaRDD<String> file = sc.textFile(path);
+				
+				JavaRDD<String> file =  sc.textFile(path);
 
 				trackConcept(file, conceptCounts, externalConcepts);
 				minimalTypes = trackMinimalType(file);
@@ -78,13 +82,12 @@ public class MinimalTypesCalculation implements Processing {
 		} catch (Exception e) {
 			Events.summarization().error("error processing " + types.name(), e);
 		}
-
+		
 		sc.close();
 		String prefix = new Files().prefixOf(types);
 		writeConceptCounts(conceptCounts, targetDirectory, prefix);
 		writeExternalConcepts(externalConcepts, targetDirectory, prefix);
 		writeMinimalTypes(minimalTypes, targetDirectory, prefix);
-
 	}
 
 	private static Map<String, HashSet<String>> trackMinimalType(JavaRDD<String> file) {
@@ -97,7 +100,6 @@ public class MinimalTypesCalculation implements Processing {
 		 * minimalTypes.get(entity).remove(minimalType); } }
 		 * minimalTypes.get(entity).add(concept);
 		 */
-
 		JavaPairRDD<String, HashSet<String>> minimalTypes = file
 				.mapToPair(new PairFunction<String, String, HashSet<String>>() {
 					/**
@@ -215,7 +217,6 @@ public class MinimalTypesCalculation implements Processing {
 				}
 			}
 		}
-
 	}
 
 	private void writeExternalConcepts(List<String> externalConcepts, File directory, String prefix) throws Exception {

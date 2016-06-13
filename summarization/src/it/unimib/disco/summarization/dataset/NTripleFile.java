@@ -16,13 +16,14 @@ import com.hp.hpl.jena.rdf.model.Statement;
 public class NTripleFile {
 
 	private static NTripleAnalysis[] analyzers;
-	private SparkConf conf;
 	private JavaSparkContext sc;
+	//private SparkConf conf;
 
 	public NTripleFile(NTripleAnalysis... analyzers) {
+
 		NTripleFile.analyzers = analyzers;
-		conf = new SparkConf().setAppName("Summarization").setMaster("local[4]")
-				.set("spark.driver.allowMultipleContexts", "true");
+		
+		//conf = new SparkConf().set("spark.driver.allowMultipleContexts", "true");
 	}
 
 	public void process(InputFile file) throws Exception {
@@ -50,14 +51,14 @@ public class NTripleFile {
 		 * file.name(), e); } }
 		 */
 		if (file.hasNextLine()) {
-			sc = new JavaSparkContext(conf);
-			sc.setLocalProperty("spark.driver.allowMultipleContexts", "true");
-			HDFS hdfs = new HDFS(file);
+			//HDFS hdfs = new HDFS(file);
+			sc = new JavaSparkContext(new SparkConf());
 			try {
 
-				 String path = file.name();
+				String path = file.name();
 
 				//String path = hdfs.createHadoopCopy();
+				
 				JavaRDD<String> lines = sc.textFile(path);
 
 				JavaRDD<Statement> statements = calculate_statements(lines);
@@ -67,13 +68,11 @@ public class NTripleFile {
 			} catch (Exception e) {
 				Events.summarization().error("error processing a line from " + file.name(), e);
 			}
-			
 			sc.close();
 		}
 	}
 
 	private static JavaRDD<Statement> calculate_statements(JavaRDD<String> lines) throws Exception {
-
 		JavaRDD<Statement> statements = lines.map(new Function<String, Statement>() {
 			/**
 			 * 
@@ -126,5 +125,4 @@ public class NTripleFile {
 		Statement statement = model.listStatements().next();
 		return statement;
 	}
-
 }

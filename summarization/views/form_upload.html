@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>ABSTAT</title>
+		<link href="static/css/bootstrap.min.css" rel="stylesheet">
+		<link rel="shortcut icon" href="static/img/abstat.svg">
+		<script src="static/js/upload.js"></script>
+	</head>
+	
+	<body>
+		<div class="container-fluid">
+			<div class="page-header" style="background: url('static/img/logo.jpg') right; background-repeat: no-repeat; background-size: contain">
+				<h1><img alt="" src="static/img/abstat.svg"> ABSTAT <small>linked data summaries</small></h1>
+			</div>
+
+			<form id="fileUpload" method="post" enctype="multipart/form-data">
+				<table align="center">
+					<tr height="35">
+						<td>insert dataset &nbsp;&nbsp;</td>
+						<td><input type="file" id="dataset" size="30" value=""></td>
+					</tr>
+					<tr height="35">
+						<td>insert ontology &nbsp;&nbsp;</td>
+						<td><input type="file" name="ontology" size="30" value=""></td>
+					</tr>
+					<tr height="35">
+						<td>insert email &nbsp;&nbsp;</td>
+						<td><input type="text" name="email" size="30" value=""></td>
+					</tr>
+				</table>
+			
+				<br>
+
+				<div align="center">
+					<input type="submit" value="Submit" class="btn btn-primary" ng-click="submitForm(fileUpload)">
+					<input type="reset" name="reset" value="Reset" class="btn btn-primary">
+				</div>
+			</form>
+		</div>
+	</body>
+</html>

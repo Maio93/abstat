@@ -17,7 +17,7 @@
 <configuration>
     <property>
         <name>yarn.resourcemanager.hostname</name>
-        <value>localhost</value>
+        <value>10.255.122.155</value>
         <description>The hostname of the RM.</description>
     </property>
 
