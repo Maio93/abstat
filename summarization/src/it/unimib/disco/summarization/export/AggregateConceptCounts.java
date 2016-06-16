@@ -5,6 +5,9 @@ import it.unimib.disco.summarization.dataset.Files;
 
 import java.io.File;
 
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+
 public class AggregateConceptCounts {
 
 	public static void main(String[] args) throws Exception {
@@ -14,7 +17,8 @@ public class AggregateConceptCounts {
 		File sourceDirectory = new File(args[0]);
 		File targetFile = new File(args[1], "count-concepts.txt");
 		
-		ConceptCount counts = new ConceptCount();
+		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		ConceptCount counts = new ConceptCount(sc);
 		for(File file : new Files().get(sourceDirectory, "_countConcepts.txt")){
 			try{
 				counts.process(file);
@@ -22,6 +26,8 @@ public class AggregateConceptCounts {
 				Events.summarization().error("processing " + file, e);
 			}
 		}
+		
 		counts.writeResultsTo(targetFile);
+		sc.stop();
 	}
 }

@@ -3,7 +3,7 @@ package it.unimib.disco.summarization.dataset;
 import it.unimib.disco.summarization.export.Events;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.spark.SparkConf;
+//import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
@@ -19,10 +19,10 @@ public class NTripleFile {
 	private JavaSparkContext sc;
 	//private SparkConf conf;
 
-	public NTripleFile(NTripleAnalysis... analyzers) {
+	public NTripleFile(JavaSparkContext sc, NTripleAnalysis... analyzers) {
 
 		NTripleFile.analyzers = analyzers;
-		
+		this.sc = sc;
 		//conf = new SparkConf().set("spark.driver.allowMultipleContexts", "true");
 	}
 
@@ -52,7 +52,6 @@ public class NTripleFile {
 		 */
 		if (file.hasNextLine()) {
 			//HDFS hdfs = new HDFS(file);
-			sc = new JavaSparkContext(new SparkConf());
 			try {
 
 				String path = file.name();
@@ -68,7 +67,6 @@ public class NTripleFile {
 			} catch (Exception e) {
 				Events.summarization().error("error processing a line from " + file.name(), e);
 			}
-			sc.close();
 		}
 	}
 

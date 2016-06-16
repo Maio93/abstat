@@ -25,6 +25,7 @@ public class HDFS {
 	}
 
 	public String createHadoopCopy() throws IOException, URISyntaxException {
+		System.out.println("Creazione file: " + file.name());
 		fs = FileSystem.get(new URI("hdfs://master:54310"), conf);
 		fs.createNewFile(new Path(hadoopPath));
 		fs.copyFromLocalFile(new Path(file.name()), new Path(hadoopPath));
@@ -33,6 +34,7 @@ public class HDFS {
 
 	@SuppressWarnings("deprecation")
 	public void deleteHadoopCopy() throws IOException {
+		System.out.println("Eliminazione file: " + file.name());
 		fs.delete(new Path(hadoopPath));
 		fs.close();
 	}

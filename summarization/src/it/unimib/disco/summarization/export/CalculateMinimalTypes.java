@@ -8,8 +8,11 @@ import java.io.File;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
 
 import com.hp.hpl.jena.ontology.OntModel;
+
 
 public class CalculateMinimalTypes {
 
@@ -25,8 +28,10 @@ public class CalculateMinimalTypes {
 		
 		OntModel ontologyModel = new Model(ontology.getAbsolutePath(),"RDF/XML").getOntologyModel();
 		
-		MinimalTypesCalculation minimalTypes = new MinimalTypesCalculation(ontologyModel, targetDirectory);
-		
+		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		MinimalTypesCalculation minimalTypes = new MinimalTypesCalculation(ontologyModel, targetDirectory, sc);
+
 		new ParallelProcessing(typesDirectory, "_types.nt").process(minimalTypes);
+		sc.stop();
 	}
 }

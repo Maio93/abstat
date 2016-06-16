@@ -3,6 +3,9 @@ package it.unimib.disco.summarization.dataset;
 import java.io.File;
 import java.util.Vector;
 
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+
 public class OverallDatatypeRelationsCounting implements Processing {
 
 	private Vector<NTripleAnalysis> datatypesCount;
@@ -12,6 +15,7 @@ public class OverallDatatypeRelationsCounting implements Processing {
 	private File propertyFile;
 	private File akps;
 	private File minimalTypes;
+	private JavaSparkContext sc;
 
 	public OverallDatatypeRelationsCounting(File datatypeFile, File propertyFile, File akps, File minimalTypes) {
 		this.datatypesCount = new Vector<NTripleAnalysis>();
@@ -32,11 +36,14 @@ public class OverallDatatypeRelationsCounting implements Processing {
 		File minimalTypesFile = new File(minimalTypes, prefix + "_minType.txt");
 		AKPDatatypeCount akpCount = new AKPDatatypeCount(new TextInput(new FileSystemConnector(minimalTypesFile)));
 
-		new NTripleFile(analysis, propertyCount, akpCount).process(file);
+		sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		new NTripleFile(sc, analysis, propertyCount, akpCount).process(file);
 
+		
 		datatypesCount.add(analysis);
 		propertiesCount.add(propertyCount);
 		akpCounts.add(akpCount);
+		sc.stop();
 	}
 
 	public void endProcessing() throws Exception {

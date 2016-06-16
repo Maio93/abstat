@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.Test;
 
 import com.hp.hpl.jena.vocabulary.OWL;
@@ -20,6 +22,7 @@ import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 
+	private JavaSparkContext sc;
 	@Test
 	public void shouldParseFileNamesWithStrangeSeparators() throws Exception {
 		
@@ -31,6 +34,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		minimalTypesFrom(ontology, directory).process(types);
 		
 		assertThat(new File(directory, "__minType.txt").exists(), is(true));
+		sc.stop();
 	}
 	
 	@Test
@@ -44,6 +48,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		minimalTypesFrom(ontology, directory).process(types);
 		
 		assertThat(new File(directory, "others_minType.txt").exists(), is(true));
+		sc.stop();
 	}
 	
 	@Test
@@ -59,6 +64,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		assertThat(new File(directory, "s_minType.txt").exists(), is(true));
 		assertThat(new File(directory, "s_uknHierConcept.txt").exists(), is(true));
 		assertThat(new File(directory, "s_countConcepts.txt").exists(), is(true));
+		sc.stop();
 	}
 
 	@Test
@@ -74,6 +80,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		assertThat(new File(directory, "s_minType.txt").exists(), is(true));
 		assertThat(new File(directory, "s_uknHierConcept.txt").exists(), is(true));
 		assertThat(new File(directory, "s_countConcepts.txt").exists(), is(true));
+		sc.stop();
 	}
 	
 	@Test
@@ -88,6 +95,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		assertThat(linesOf("s_minType.txt"), hasSize(0));
 		assertThat(linesOf("s_uknHierConcept.txt"), hasSize(0));
 		assertThat(linesOf("s_countConcepts.txt"), hasSize(0));
+		sc.stop();
 	}
 	
 	@Test
@@ -103,6 +111,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		List<String> conceptCounts = linesOf("s_countConcepts.txt");
 		
 		assertThat(conceptCounts, hasItem("http://concept##1"));
+		sc.stop();
 	}
 	
 	@Test
@@ -116,6 +125,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		
 		assertThat(linesOf("s_countConcepts.txt"), is(empty()));
 		assertThat(linesOf("s_uknHierConcept.txt"), hasItem("http://entity##http://concept"));
+		sc.stop();
 	}
 	
 	@Test
@@ -130,6 +140,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		minimalTypesFrom(ontology, directory).process(types);
 		
 		assertThat(linesOf("s_minType.txt"), hasItem("1##http://entity##http://concept"));
+		sc.stop();
 	}
 	
 	@Test
@@ -148,6 +159,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		minimalTypesFrom(ontology, directory).process(types);
 		
 		assertThat(linesOf("s_minType.txt"), hasItem("1##http://entity##http://concept"));
+		sc.stop();
 	}
 	
 	@Test
@@ -166,6 +178,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		minimalTypesFrom(ontology, directory).process(types);
 		
 		assertThat(linesOf("s_minType.txt"), hasItem("1##http://entity##http://concept"));
+		sc.stop();
 	}
 	
 	@Test
@@ -183,6 +196,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		minimalTypesFrom(ontology, directory).process(types);
 		
 		assertThat(linesOf("s_minType.txt"), hasItem("2##http://entity##http://concept#-#http://thing"));
+		sc.stop();
 	}
 	
 	@Test
@@ -204,6 +218,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		minimalTypesFrom(ontology, directory).process(types);
 
 		assertThat(linesOf("s_minType.txt"), hasItem("2##http://entity##http://concept#-#http://other"));
+		sc.stop();
 	}
 	
 	@Test
@@ -221,6 +236,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		minimalTypesFrom(ontology, directory).process(types);
 		
 		assertThat(linesOf("s_minType.txt"), hasItem("2##http://entity##http://dbpedia.org/Person#-#http://schema.org/Person"));
+		sc.stop();
 	}
 	
 	@Test
@@ -235,6 +251,7 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		minimalTypesFrom(ontology, directory).process(types);
 
 		assertThat(linesOf("s_uknHierConcept.txt"), hasItem("http://entity##http://unknown"));
+		sc.stop();
 	}
 	
 	@Test
@@ -254,11 +271,13 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 		
 		assertThat(linesOf("s_countConcepts.txt"), hasItem("http://datatype/age##0"));
 		assertThat(linesOf("s_countConcepts.txt"), hasItem("http://person##1"));
+		sc.stop();
 	}
 	
 	private MinimalTypesCalculation minimalTypesFrom(ToyOntology ontology, File directory) throws Exception {
 		
-		return new MinimalTypesCalculation(ontology.build(), directory);
+		sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		return new MinimalTypesCalculation(ontology.build(), directory, sc);
 	}
 	
 	private List<String> linesOf(String name) throws IOException {

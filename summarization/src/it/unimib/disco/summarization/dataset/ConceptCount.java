@@ -2,22 +2,86 @@ package it.unimib.disco.summarization.dataset;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.PairFunction;
+
+import scala.Tuple2;
 
 public class ConceptCount {
 
 	HashMap<String, Long> conceptCounts = new HashMap<String, Long>();
+	private JavaSparkContext sc;
 	
+	public ConceptCount(JavaSparkContext sc) {
+		this.sc = sc;
+	}
 	public ConceptCount process(File file) throws Exception {
 		InputFile counts = new TextInput(new FileSystemConnector(file));
-		while(counts.hasNextLine()){
+		/*while(counts.hasNextLine()){
 			String[] splitted = counts.nextLine().split("##");
 			String concept = splitted[0];
 			Long count = Long.parseLong(splitted[1]);
 			if(!conceptCounts.containsKey(concept)) conceptCounts.put(concept, 0l);
 			conceptCounts.put(concept, conceptCounts.get(concept) + count);
 		}
+		*/
+		
+		if(counts.hasNextLine()){
+			String path = counts.name();
+			JavaRDD<String> lines = sc.textFile(path);
+			
+			Map<String, Long> tmp = new HashMap<String, Long>();
+			
+			tmp = count_concepts(lines);
+			add_to_conceptCounts(tmp);
+		}
 		return this;
+	}
+	
+	private static Map<String, Long> count_concepts(JavaRDD<String> lines){
+		JavaPairRDD<String, Long> conceptCounts = lines.mapToPair(new PairFunction<String, String, Long>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Tuple2<String, Long> call(String line) throws Exception {
+				String[] splitted = line.split("##");
+				String concept = splitted[0];
+				Long count = Long.parseLong(splitted[1]);
+				return new Tuple2<String, Long>(concept, count);
+			}
+			
+		});	
+		
+		conceptCounts = conceptCounts.reduceByKey(new Function2<Long, Long, Long>(){
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Long call(Long a, Long b) throws Exception {
+				return a + b;
+			}
+			
+		});
+		
+		return conceptCounts.collectAsMap();
+	}
+	
+	private void add_to_conceptCounts(Map<String, Long> tmp){
+		for(Entry<String, Long> concept : tmp.entrySet()){
+			String key = concept.getKey();
+			Long value = concept.getValue();
+			if(!conceptCounts.containsKey(key)) conceptCounts.put(key, 0l);
+			conceptCounts.put(key, conceptCounts.get(key) + value);
+		}
 	}
 
 	public ConceptCount writeResultsTo(File results) throws Exception {

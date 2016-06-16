@@ -5,11 +5,7 @@ import it.unimib.disco.summarization.export.Events;
 import java.io.File;
 /*import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.VoidFunction;*/
+*/
 
 public class ParallelProcessing {
 

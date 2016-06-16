@@ -26,7 +26,7 @@ import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.vocabulary.OWL;
 
-import org.apache.spark.SparkConf;
+//import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -43,12 +43,13 @@ public class MinimalTypesCalculation implements Processing {
 	private JavaSparkContext sc;
 	//private SparkConf conf;
 
-	public MinimalTypesCalculation(OntModel ontology, File targetDirectory) throws Exception {
+	public MinimalTypesCalculation(OntModel ontology, File targetDirectory, JavaSparkContext sc) throws Exception {
 		Concepts concepts = extractConcepts(ontology);
 
 		this.targetDirectory = targetDirectory;
 		this.concepts = concepts;
 		MinimalTypesCalculation.graph = new TypeGraph(concepts, subclassRelations);
+		this.sc = sc;
 		
 		//conf = new SparkConf().set("spark.driver.allowMultipleContexts", "true");
 		//conf.setMaster("local[4]").setAppName("summarization");
@@ -64,7 +65,6 @@ public class MinimalTypesCalculation implements Processing {
 		List<String> externalConcepts = new ArrayList<String>();
 		Map<String, HashSet<String>> minimalTypes = new HashMap<String, HashSet<String>>();
 
-		sc = new JavaSparkContext(new SparkConf());
 		//HDFS hdfs = new HDFS(types);
 		try {
 			String path = types.name();
@@ -83,7 +83,6 @@ public class MinimalTypesCalculation implements Processing {
 			Events.summarization().error("error processing " + types.name(), e);
 		}
 		
-		sc.close();
 		String prefix = new Files().prefixOf(types);
 		writeConceptCounts(conceptCounts, targetDirectory, prefix);
 		writeExternalConcepts(externalConcepts, targetDirectory, prefix);

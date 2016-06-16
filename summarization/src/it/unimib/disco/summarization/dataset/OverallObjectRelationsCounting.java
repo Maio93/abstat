@@ -3,6 +3,9 @@ package it.unimib.disco.summarization.dataset;
 import java.io.File;
 import java.util.Vector;
 
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+
 public class OverallObjectRelationsCounting implements Processing{
 
 	private Vector<NTripleAnalysis> propertiesCount;
@@ -10,6 +13,7 @@ public class OverallObjectRelationsCounting implements Processing{
 	private File propertyFile;
 	private File akps;
 	private MinimalTypes minimalTypesOracle;
+	private JavaSparkContext sc;
 	
 	public OverallObjectRelationsCounting(File propertyFile, File akps, File types) throws Exception {
 		this.propertiesCount = new Vector<NTripleAnalysis>();
@@ -24,14 +28,18 @@ public class OverallObjectRelationsCounting implements Processing{
 		PropertyCount propertyCount = new PropertyCount();
 		AKPObjectCount akpCount = new AKPObjectCount(minimalTypesOracle);
 		
-		new NTripleFile(propertyCount, akpCount).process(file);
+		sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		new NTripleFile(sc, propertyCount, akpCount).process(file);
+		
 		
 		propertiesCount.add(propertyCount);
 		akpCounts.add(akpCount);
+		sc.stop();
 	}
 	
 	public void endProcessing() throws Exception {
 		new AggregatedCount(propertiesCount).writeTo(propertyFile);
 		new AggregatedCount(akpCounts).writeTo(akps);
+		
 	}
 }

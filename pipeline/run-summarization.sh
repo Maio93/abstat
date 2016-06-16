@@ -7,8 +7,7 @@ cd $root/../summarization
 
 #Setto le variabili
 JAVA_HOME="/usr" #Server: /usr/lib/jvm/java-6-sun
-SPARK_HOME="/schema-summaries/spark"
-HADOOP_HOME="/schema-summaries/hadoop"
+SPARK_HOME="/schema-summaries/spark/"
 debug=1 #0: Disabled, 1:Enabled
 #Setto opportunamente il comando di debug
 if [ $debug -eq 1 ]
@@ -312,11 +311,6 @@ echo "---Start: Counting---"
 
 	rm -rf $ResultsDirectory/patterns
 	mkdir -p $ResultsDirectory/patterns
-	#export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
-	#export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
-
-	#$HADOOP_HOME/sbin/start-dfs.sh
-	#$HADOOP_HOME/sbin/start-yarn.sh
 
 	master="local[4]"
 	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part1" --class it.unimib.disco.summarization.export.CalculateMinimalTypes summarization.jar "$OntologyFile" "$orgDatasetFile" "$minTypeResult"
