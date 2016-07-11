@@ -19,7 +19,8 @@ public class ConceptCountTest extends TestWithTemporaryData{
 	public void shouldAggregateTheConceptCounts() throws Exception {
 		File results = temporary.file();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		JavaSparkContext sc = new JavaSparkContext(conf);
 		new ConceptCount(sc).process(temporary.file("concept#name##10"
 												+ "\n"
 												+ "other concept##34"))
@@ -39,7 +40,8 @@ public class ConceptCountTest extends TestWithTemporaryData{
 	public void shouldOmitConceptsWithNoOccurrences() throws Exception {
 		File results = temporary.file();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		JavaSparkContext sc = new JavaSparkContext(conf);
 		new ConceptCount(sc).process(temporary.file("concept##0"))
 						  .writeResultsTo(results);
 		

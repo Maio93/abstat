@@ -33,7 +33,11 @@ public class ConceptCount {
 		*/
 		
 		if(counts.hasNextLine()){
+			
 			String path = counts.name();
+			if(sc.master().equals("yarn-cluster"));
+				path = "hdfs://master:54310" + path;
+			
 			JavaRDD<String> lines = sc.textFile(path);
 			
 			Map<String, Long> tmp = new HashMap<String, Long>();

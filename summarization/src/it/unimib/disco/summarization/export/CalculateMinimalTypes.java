@@ -28,7 +28,8 @@ public class CalculateMinimalTypes {
 		
 		OntModel ontologyModel = new Model(ontology.getAbsolutePath(),"RDF/XML").getOntologyModel();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf();
+		JavaSparkContext sc = new JavaSparkContext(conf.setAppName("summarization").set("spark.hadoop.validateOutputSpecs", "true"));
 		MinimalTypesCalculation minimalTypes = new MinimalTypesCalculation(ontologyModel, targetDirectory, sc);
 
 		new ParallelProcessing(typesDirectory, "_types.nt").process(minimalTypes);

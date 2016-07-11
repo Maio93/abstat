@@ -17,7 +17,8 @@ public class AggregateConceptCounts {
 		File sourceDirectory = new File(args[0]);
 		File targetFile = new File(args[1], "count-concepts.txt");
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf();
+		JavaSparkContext sc = new JavaSparkContext(conf.setAppName("summarization").set("spark.hadoop.validateOutputSpecs", "true"));
 		ConceptCount counts = new ConceptCount(sc);
 		for(File file : new Files().get(sourceDirectory, "_countConcepts.txt")){
 			try{

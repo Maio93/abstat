@@ -3,7 +3,6 @@ package it.unimib.disco.summarization.dataset;
 import java.io.File;
 import java.util.Vector;
 
-import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 
 public class OverallDatatypeRelationsCounting implements Processing {
@@ -36,14 +35,15 @@ public class OverallDatatypeRelationsCounting implements Processing {
 		File minimalTypesFile = new File(minimalTypes, prefix + "_minType.txt");
 		AKPDatatypeCount akpCount = new AKPDatatypeCount(new TextInput(new FileSystemConnector(minimalTypesFile)));
 
-		sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
 		new NTripleFile(sc, analysis, propertyCount, akpCount).process(file);
 
-		
 		datatypesCount.add(analysis);
 		propertiesCount.add(propertyCount);
 		akpCounts.add(akpCount);
-		sc.stop();
+	}
+	
+	public void setSC (JavaSparkContext sc){
+		this.sc = sc;
 	}
 
 	public void endProcessing() throws Exception {

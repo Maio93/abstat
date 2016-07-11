@@ -7,7 +7,7 @@ cd $root/../summarization
 
 #Setto le variabili
 JAVA_HOME="/usr" #Server: /usr/lib/jvm/java-6-sun
-SPARK_HOME="/schema-summaries/spark/"
+SPARK_HOME="/home/fabio/Scrivania/spark"
 debug=1 #0: Disabled, 1:Enabled
 #Setto opportunamente il comando di debug
 if [ $debug -eq 1 ]
@@ -312,15 +312,26 @@ echo "---Start: Counting---"
 	rm -rf $ResultsDirectory/patterns
 	mkdir -p $ResultsDirectory/patterns
 
-	master="local[4]"
-	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part1" --class it.unimib.disco.summarization.export.CalculateMinimalTypes summarization.jar "$OntologyFile" "$orgDatasetFile" "$minTypeResult"
+	export HADOOP_CONF_DIR=/home/fabio/Scrivania/hadoop/etc/hadoop
+	export YARN_CONF_DIR=/home/fabio/Scrivania/hadoop/etc/hadoop
+
+	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -rm -R "hdfs://master:54310/home"
+	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -mkdir -p "hdfs://master:54310/home/fabio/Scrivania/Stage/abstat/data"
+
+	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -put "/home/fabio/Scrivania/Stage/abstat/data/datasets" "hdfs://master:54310/home/fabio/Scrivania/Stage/abstat/data"
+	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -put "summarization.jar" "/home"
+
+	master="yarn --deploy-mode cluster"
+	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part1" --class it.unimib.disco.summarization.export.CalculateMinimalTypes "hdfs://master:54310/home/summarization.jar" "$OntologyFile" "$orgDatasetFile" "$minTypeResult"
 	if [ $? -ne 0 ]
 	then
 	    echo "App Failed during run"
 	    exit 1
 	fi
 
-	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part2" --class it.unimib.disco.summarization.export.AggregateConceptCounts summarization.jar "$minTypeResult" "$ResultsDirectory/patterns/"
+	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -put "/home/fabio/Scrivania/Stage/abstat/data/summaries" "hdfs://master:54310/home/fabio/Scrivania/Stage/abstat/data"
+
+	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part2" --class it.unimib.disco.summarization.export.AggregateConceptCounts "hdfs://master:54310/home/summarization.jar" "$minTypeResult" "$ResultsDirectory/patterns/"
 
 	if [ $? -ne 0 ]
 	then
@@ -328,7 +339,7 @@ echo "---Start: Counting---"
 	    exit 1
 	fi
 
-	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part3" --class it.unimib.disco.summarization.export.ProcessDatatypeRelationAssertions summarization.jar "${orgDatasetFile}" "$minTypeResult" "$ResultsDirectory/patterns/"
+	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part3" --class it.unimib.disco.summarization.export.ProcessDatatypeRelationAssertions "hdfs://master:54310/home/summarization.jar" "${orgDatasetFile}" "$minTypeResult" "$ResultsDirectory/patterns/"
 
 	if [ $? -ne 0 ]
 	then
@@ -336,7 +347,7 @@ echo "---Start: Counting---"
 	    exit 1
 	fi
 
-	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part4" --class it.unimib.disco.summarization.export.ProcessObjectRelationAssertions summarization.jar "${orgDatasetFile}" "$minTypeResult" "$ResultsDirectory/patterns/"
+	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part4" --class it.unimib.disco.summarization.export.ProcessObjectRelationAssertions "hdfs://master:54310/home/summarization.jar" "${orgDatasetFile}" "$minTypeResult" "$ResultsDirectory/patterns/"
 
 	if [ $? -ne 0 ]
 	then

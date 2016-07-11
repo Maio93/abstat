@@ -5,21 +5,29 @@ import it.unimib.disco.summarization.dataset.ParallelProcessing;
 
 import java.io.File;
 
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+
 public class ProcessObjectRelationAssertions {
-	
+
 	public static void main(String[] args) throws Exception {
-		
+
 		Events.summarization();
-		
+
 		File sourceDirectory = new File(args[0]);
 		File minimalTypesDirectory = new File(args[1]);
 		File properties = new File(new File(args[2]), "count-object-properties.txt");
 		File akps = new File(new File(args[2]), "object-akp.txt");
-		
-		OverallObjectRelationsCounting counts = new OverallObjectRelationsCounting(properties, akps, minimalTypesDirectory);
-		
+
+		SparkConf conf = new SparkConf();
+		JavaSparkContext sc = new JavaSparkContext(conf.setAppName("summarization").set("spark.hadoop.validateOutputSpecs", "true"));
+		OverallObjectRelationsCounting counts = new OverallObjectRelationsCounting(properties, akps,
+				minimalTypesDirectory);
+		counts.setSc(sc);
+
 		new ParallelProcessing(sourceDirectory, "_obj_properties.nt").process(counts);
-	    
-	    counts.endProcessing();
-	}	
+
+		counts.endProcessing();
+		sc.stop();
+	}
 }

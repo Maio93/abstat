@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,7 +27,6 @@ import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.vocabulary.OWL;
 
-//import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -37,22 +37,18 @@ import org.apache.spark.api.java.function.PairFunction;
 public class MinimalTypesCalculation implements Processing {
 
 	private static TypeGraph graph;
-	private Concepts concepts;
-	private List<String> subclassRelations;
+	private static Concepts concepts;
+	private static List<String> subclassRelations;
 	private File targetDirectory;
 	private JavaSparkContext sc;
-	//private SparkConf conf;
 
 	public MinimalTypesCalculation(OntModel ontology, File targetDirectory, JavaSparkContext sc) throws Exception {
 		Concepts concepts = extractConcepts(ontology);
 
 		this.targetDirectory = targetDirectory;
-		this.concepts = concepts;
+		MinimalTypesCalculation.concepts = concepts;
 		MinimalTypesCalculation.graph = new TypeGraph(concepts, subclassRelations);
 		this.sc = sc;
-		
-		//conf = new SparkConf().set("spark.driver.allowMultipleContexts", "true");
-		//conf.setMaster("local[4]").setAppName("summarization");
 	}
 
 	@Override
@@ -65,19 +61,46 @@ public class MinimalTypesCalculation implements Processing {
 		List<String> externalConcepts = new ArrayList<String>();
 		Map<String, HashSet<String>> minimalTypes = new HashMap<String, HashSet<String>>();
 
-		//HDFS hdfs = new HDFS(types);
 		try {
 			String path = types.name();
+			if(sc.master().equals("yarn-cluster"))
+				path = "hdfs://master:54310" + path;
 			
-			if (types.hasNextLine()) {
-				//String path = hdfs.createHadoopCopy();
-				
+			
+			if (types.hasNextLine()) {				
 				JavaRDD<String> file =  sc.textFile(path);
-
 				trackConcept(file, conceptCounts, externalConcepts);
-				minimalTypes = trackMinimalType(file);
-
-				//hdfs.deleteHadoopCopy();
+				Map<String, Iterable<HashSet<String>>> iterableMinimalTypes = trackMinimalType(file);
+				for(String key : iterableMinimalTypes.keySet()){
+					Iterable<HashSet<String>> hashset = iterableMinimalTypes.get(key);
+					minimalTypes.put(key, new HashSet<String>());
+					Iterator<HashSet<String>> itr = hashset.iterator();
+					while(itr.hasNext()){
+						HashSet<String> minimalType = itr.next();
+						if(!minimalTypes.get(key).isEmpty()){
+							for(String type: minimalType){
+								Boolean add = true;
+								HashSet<String> copy_minimalTypes = new HashSet<String>(minimalTypes.get(key));
+								for(String min_types : copy_minimalTypes){
+									if (!graph.pathsBetween(min_types, type).isEmpty()) {
+										add = false;
+										System.out.println("elemento non aggiunto");
+										break;
+									}
+									if (!graph.pathsBetween(type, min_types).isEmpty()) {
+										minimalTypes.get(key).remove(min_types);
+									}
+								}
+								if(add){
+									minimalTypes.get(key).add(type);
+									System.out.println("elemento aggiunto");
+								}
+							}
+						}
+						else
+							minimalTypes.put(key, minimalType);
+					}
+				}
 			}
 		} catch (Exception e) {
 			Events.summarization().error("error processing " + types.name(), e);
@@ -89,7 +112,7 @@ public class MinimalTypesCalculation implements Processing {
 		writeMinimalTypes(minimalTypes, targetDirectory, prefix);
 	}
 
-	private static Map<String, HashSet<String>> trackMinimalType(JavaRDD<String> file) {
+	private static Map<String, Iterable<HashSet<String>>> trackMinimalType(JavaRDD<String> file) {
 		/*
 		 * if (!minimalTypes.containsKey(entity)) minimalTypes.put(entity, new
 		 * HashSet<String>()); for (String minimalType : new
@@ -133,43 +156,14 @@ public class MinimalTypesCalculation implements Processing {
 			}
 
 		});
+					
 
-		minimalTypes = minimalTypes.reduceByKey(new Function2<HashSet<String>, HashSet<String>, HashSet<String>>() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
+		JavaPairRDD<String,Iterable <HashSet<String>>> tmp = minimalTypes.groupByKey();
+		return tmp.collectAsMap();
 
-			public HashSet<String> call(HashSet<String> a, HashSet<String> b) {
-				boolean add;
+		//return minimalTypes.collectAsMap();
 
-				for (String minimalType_b : b) {
-					add = true;
-					HashSet<String> c = new HashSet<String>(a);
-					for (String minimalType_a : c) {
-						if (!empty_path(minimalType_a, minimalType_b)) {
-							add = false;
-							break;
-						}
-						if (!empty_path(minimalType_b, minimalType_a)) {
-							a.remove(minimalType_a);
-						}
-					}
-					if (add)
-						a.add(minimalType_b);
-				}
-
-				return a;
-			}
-		});
-
-		return minimalTypes.collectAsMap();
-
-	}
-
-	private static boolean empty_path(String leaf, String root) {
-		return graph.pathsBetween(leaf, root).isEmpty();
-	}
+	}	
 
 	private static void trackConcept(JavaRDD<String> file, HashMap<String, Integer> counts,
 			List<String> externalConcepts) {
@@ -278,9 +272,9 @@ public class MinimalTypesCalculation implements Processing {
 		OntologySubclassOfExtractor extractor = new OntologySubclassOfExtractor();
 		extractor.setConceptsSubclassOf(concepts, ontology);
 
-		this.subclassRelations = new ArrayList<String>();
+		MinimalTypesCalculation.subclassRelations = new ArrayList<String>();
 		for (List<OntClass> subClasses : extractor.getConceptsSubclassOf().getConceptsSubclassOf()) {
-			this.subclassRelations.add(subClasses.get(0) + "##" + subClasses.get(1));
+			MinimalTypesCalculation.subclassRelations.add(subClasses.get(0) + "##" + subClasses.get(1));
 		}
 
 		OntologyDomainRangeExtractor DRExtractor = new OntologyDomainRangeExtractor();

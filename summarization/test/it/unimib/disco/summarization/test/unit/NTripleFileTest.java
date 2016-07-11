@@ -18,7 +18,8 @@ public class NTripleFileTest extends TestWithTemporaryData{
 		
 		NTripleAnalysisInspector analysis = new NTripleAnalysisInspector();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		JavaSparkContext sc = new JavaSparkContext(conf);
 		new NTripleFile(sc, analysis).process(temporary.fileTextInput());
 		
 		assertThat(analysis.countProcessed(), equalTo(0));
@@ -30,7 +31,8 @@ public class NTripleFileTest extends TestWithTemporaryData{
 		
 		NTripleAnalysisInspector analysis = new NTripleAnalysisInspector();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		JavaSparkContext sc = new JavaSparkContext(conf);
 		new NTripleFile(sc, analysis).process(temporary.fileTextInput("a##b##c"));
 
 		
@@ -42,7 +44,8 @@ public class NTripleFileTest extends TestWithTemporaryData{
 	public void shouldIndexAlsoWithSpaces() throws Exception {
 		NTripleAnalysisInspector analysis = new NTripleAnalysisInspector();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		JavaSparkContext sc = new JavaSparkContext(conf);
 		new NTripleFile(sc, analysis).process(temporary.fileTextInput("http://1234##http://predicate##http://uri with space"));
 		
 		
@@ -54,7 +57,8 @@ public class NTripleFileTest extends TestWithTemporaryData{
 	public void shouldProcessAStringWithLanguage() throws Exception {
 		DatatypeCount analysis = new DatatypeCount();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		JavaSparkContext sc = new JavaSparkContext(conf);
 		new NTripleFile(sc, analysis).process(temporary.fileTextInput("http://1234##http://predicate##\"a string@en\""));
 		
 		
@@ -66,7 +70,8 @@ public class NTripleFileTest extends TestWithTemporaryData{
 	public void shouldProcessAString() throws Exception {
 		DatatypeCount analysis = new DatatypeCount();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		JavaSparkContext sc = new JavaSparkContext(conf);
 		new NTripleFile(sc, analysis).process(temporary.fileTextInput("http://1234##http://predicate##\"a string\""));
 		
 		
@@ -78,7 +83,8 @@ public class NTripleFileTest extends TestWithTemporaryData{
 	public void shouldProcessADatatype() throws Exception {
 		DatatypeCount analysis = new DatatypeCount();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		JavaSparkContext sc = new JavaSparkContext(conf);
 		new NTripleFile(sc, analysis).process(temporary.fileTextInput("http://1234##http://predicate##\"34\"##type"));
 		
 		
@@ -90,7 +96,8 @@ public class NTripleFileTest extends TestWithTemporaryData{
 	public void shouldProcessAComplexDatatype() throws Exception {
 		DatatypeCount analysis = new DatatypeCount();
 		
-		JavaSparkContext sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		JavaSparkContext sc = new JavaSparkContext(conf);
 		new NTripleFile(sc, analysis).process(temporary.fileTextInput("http://1234##http://predicate##\"34\"##http://uri#type"));
 		
 		

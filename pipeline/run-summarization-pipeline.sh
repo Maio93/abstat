@@ -16,6 +16,7 @@ results=$current_directory/../data/summaries/$dataset
 mkdir -p $results
 results=$(as_absolute $results)
 
+
 echo "Running the summarization pipeline"
 echo "With data from $data"
 echo "Saving results in $results"

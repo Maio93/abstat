@@ -2,12 +2,13 @@ package it.unimib.disco.summarization.dataset;
 
 import it.unimib.disco.summarization.export.Events;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.io.IOUtils;
-//import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.VoidFunction;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -17,13 +18,14 @@ public class NTripleFile {
 
 	private static NTripleAnalysis[] analyzers;
 	private JavaSparkContext sc;
-	//private SparkConf conf;
+	// private SparkConf conf;
 
 	public NTripleFile(JavaSparkContext sc, NTripleAnalysis... analyzers) {
 
 		NTripleFile.analyzers = analyzers;
 		this.sc = sc;
-		//conf = new SparkConf().set("spark.driver.allowMultipleContexts", "true");
+		// conf = new SparkConf().set("spark.driver.allowMultipleContexts",
+		// "true");
 	}
 
 	public void process(InputFile file) throws Exception {
@@ -51,33 +53,41 @@ public class NTripleFile {
 		 * file.name(), e); } }
 		 */
 		if (file.hasNextLine()) {
-			//HDFS hdfs = new HDFS(file);
 			try {
 
 				String path = file.name();
 
-				//String path = hdfs.createHadoopCopy();
-				
+				if (sc.master().equals("yarn-cluster"))
+					path = "hdfs://master:54310" + path;
+
 				JavaRDD<String> lines = sc.textFile(path);
 
-				JavaRDD<Statement> statements = calculate_statements(lines);
-				analysis_statements(statements);
+				JavaRDD<String> statements = calculate_statements(lines);
+				List<String> refined_lines = new ArrayList<String>();
+				refined_lines = statements.collect();
 
-				//hdfs.deleteHadoopCopy();
+				for (String refined_line : refined_lines) {
+					Statement statement = extract_statement(refined_line);
+					NTriple triple = new NTriple(statement);
+					for (NTripleAnalysis analysis : analyzers) {
+						analysis.track(triple);
+					}
+				}
+
 			} catch (Exception e) {
 				Events.summarization().error("error processing a line from " + file.name(), e);
 			}
 		}
 	}
 
-	private static JavaRDD<Statement> calculate_statements(JavaRDD<String> lines) throws Exception {
-		JavaRDD<Statement> statements = lines.map(new Function<String, Statement>() {
+	private static JavaRDD<String> calculate_statements(JavaRDD<String> lines) throws Exception {
+		JavaRDD<String> statements = lines.map(new Function<String, String>() {
 			/**
 			 * 
 			 */
 			private static final long serialVersionUID = 1L;
 
-			public Statement call(String line) {
+			public String call(String line) {
 				String[] splitted = line.split("##");
 				String subject = splitted[0];
 				String property = splitted[1];
@@ -94,27 +104,11 @@ public class NTripleFile {
 
 				String refined_line = "<" + subject + "> <" + property + "> " + object + datatype + " .";
 
-				return extract_statement(refined_line);
+				return refined_line;
 			}
 		});
 
 		return statements;
-	}
-
-	private static void analysis_statements(JavaRDD<Statement> statements) throws Exception {
-		statements.foreach(new VoidFunction<Statement>() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			public void call(Statement statement) {
-				NTriple triple = new NTriple(statement);
-				for (NTripleAnalysis analysis : analyzers) {
-					analysis.track(triple);
-				}
-			}
-		});
 	}
 
 	private static Statement extract_statement(String line) {

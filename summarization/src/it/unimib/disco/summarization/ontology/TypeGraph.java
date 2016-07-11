@@ -1,13 +1,18 @@
 package it.unimib.disco.summarization.ontology;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.jgraph.graph.DefaultEdge;
 import org.jgrapht.experimental.dag.DirectedAcyclicGraph;
 
-public class TypeGraph{
+public class TypeGraph implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private DirectedAcyclicGraph<String, DefaultEdge> graph;
 
 	public TypeGraph(Concepts concepts, List<String> subClasses) throws Exception{
@@ -34,10 +39,12 @@ public class TypeGraph{
 		}
 	}
 	
-	private DirectedAcyclicGraph<String, DefaultEdge> subTypeGraphFrom(Concepts concepts, List<String> subclassRelations) throws Exception {
+	private static DirectedAcyclicGraph<String, DefaultEdge> subTypeGraphFrom(Concepts concepts, List<String> subclassRelations) throws Exception {
 		DirectedAcyclicGraph<String, DefaultEdge> typeGraph = new DirectedAcyclicGraph<String, DefaultEdge>(DefaultEdge.class);
 		
-		for(String concept : concepts.getConcepts().keySet()){
+		Concepts tmp_concepts = new Concepts();
+		tmp_concepts = concepts;
+		for(String concept : tmp_concepts.getConcepts().keySet()){
 			typeGraph.addVertex(concept);
 		}
 		

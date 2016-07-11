@@ -7,6 +7,8 @@ project=$root/../summarization
 master=local[4]
 name="summarization"
 
+#echo 10.255.67.181 master >> /etc/hosts
+
 echo "Unit testing the java summarization module"
 cd $project
 ../spark/bin/spark-submit --jars summarization.jar --master $master --name $name --class org.junit.runner.JUnitCore summarization.jar it.unimib.disco.summarization.test.unit.AggregateConceptCountsTest

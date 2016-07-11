@@ -276,7 +276,8 @@ public class MinimalTypesCalculationTest extends TestWithTemporaryData{
 	
 	private MinimalTypesCalculation minimalTypesFrom(ToyOntology ontology, File directory) throws Exception {
 		
-		sc = new JavaSparkContext(new SparkConf().setMaster("local[4]").setAppName("summarization"));
+		SparkConf conf = new SparkConf().setAppName("summarization");
+		sc = new JavaSparkContext(conf);
 		return new MinimalTypesCalculation(ontology.build(), directory, sc);
 	}
 	
