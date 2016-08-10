@@ -62,9 +62,9 @@ public class NTripleFile {
 
 				JavaRDD<String> lines = sc.textFile(path);
 
-				JavaRDD<String> statements = calculate_statements(lines);
+				JavaRDD<String> rdd_refined_lines = calculate_statements(lines);
 				List<String> refined_lines = new ArrayList<String>();
-				refined_lines = statements.collect();
+				refined_lines = rdd_refined_lines.collect();
 
 				for (String refined_line : refined_lines) {
 					Statement statement = extract_statement(refined_line);

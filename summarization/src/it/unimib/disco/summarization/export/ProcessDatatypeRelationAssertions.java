@@ -20,7 +20,7 @@ public class ProcessDatatypeRelationAssertions {
 		File akps = new File(new File(args[2]), "datatype-akp.txt");
 		
 		SparkConf conf = new SparkConf();
-		JavaSparkContext sc = new JavaSparkContext(conf.setAppName("summarization").set("spark.hadoop.validateOutputSpecs", "true"));
+		JavaSparkContext sc = new JavaSparkContext(conf.setAppName("summarization"));
 		OverallDatatypeRelationsCounting counts = new OverallDatatypeRelationsCounting(datatypes, properties, akps, minimalTypesDirectory);
 		counts.setSC(sc);
 		

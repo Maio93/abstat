@@ -61,4 +61,8 @@ public class TypeGraph implements Serializable{
 		
 		return typeGraph;
 	}
+	
+	public void Stampa() {
+		System.out.println("prova");
+	}
 }

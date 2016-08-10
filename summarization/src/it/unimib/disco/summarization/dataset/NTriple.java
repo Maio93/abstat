@@ -1,11 +1,17 @@
 package it.unimib.disco.summarization.dataset;
 
+import java.io.Serializable;
+
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
-public class NTriple{
+public class NTriple implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private Statement nodes;
 
 	public NTriple(Statement triple){

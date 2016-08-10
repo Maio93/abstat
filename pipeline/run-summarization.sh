@@ -7,7 +7,8 @@ cd $root/../summarization
 
 #Setto le variabili
 JAVA_HOME="/usr" #Server: /usr/lib/jvm/java-6-sun
-SPARK_HOME="/home/fabio/Scrivania/spark"
+SPARK_HOME="$SPARK"
+HADOOP_HOME="$HADOOP"
 debug=1 #0: Disabled, 1:Enabled
 #Setto opportunamente il comando di debug
 if [ $debug -eq 1 ]
@@ -302,6 +303,39 @@ echo ""
 
 } &>> $log_file
 
+{
+echo "---Start: Upload data---"
+	startBlock=$SECONDS
+
+	master='local[4]'
+
+	if [ "$master" == "yarn --deploy-mode cluster" ]
+	then
+		#carico dati su hdfs
+		$HADOOP_HOME/bin/hdfs dfs -rm -R "hdfs://master:54310/home"
+		$HADOOP_HOME/bin/hdfs dfs -mkdir -p "hdfs://master:54310/home/fabio/Scrivania/Stage/abstat/data"
+
+		$HADOOP_HOME/bin/hdfs dfs -put "/home/fabio/Scrivania/Stage/abstat/data/datasets" "hdfs://master:54310/home/fabio/Scrivania/Stage/abstat/data"
+		$HADOOP_HOME/bin/hdfs dfs -put "$SPARK_HOME/lib/spark-assembly-1.6.1-hadoop2.6.0.jar" "/home"
+		$HADOOP_HOME/bin/hdfs dfs -put "summarization.jar" "/home"
+		JAR="hdfs://master:54310/home/summarization.jar"
+		CONF="--conf spark.yarn.jar=\"hdfs://master:54310/home/spark-assembly-1.6.1-hadoop2.6.0.jar\" "
+	else
+		JAR="summarization.jar"
+		CONF=""
+	fi
+
+	endBlock=$SECONDS
+	if [ $debug -eq 1 ]
+	then
+		echo "Time: $((endBlock - startBlock)) secs."
+		echo ""
+	fi
+
+	echo "---End: Upload Data---"
+	echo ""
+} &>> $log_file
+
 { 
 echo "---Start: Counting---"
 	startBlock=$SECONDS	
@@ -311,27 +345,20 @@ echo "---Start: Counting---"
 
 	rm -rf $ResultsDirectory/patterns
 	mkdir -p $ResultsDirectory/patterns
-
-	export HADOOP_CONF_DIR=/home/fabio/Scrivania/hadoop/etc/hadoop
-	export YARN_CONF_DIR=/home/fabio/Scrivania/hadoop/etc/hadoop
-
-	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -rm -R "hdfs://master:54310/home"
-	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -mkdir -p "hdfs://master:54310/home/fabio/Scrivania/Stage/abstat/data"
-
-	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -put "/home/fabio/Scrivania/Stage/abstat/data/datasets" "hdfs://master:54310/home/fabio/Scrivania/Stage/abstat/data"
-	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -put "summarization.jar" "/home"
-
-	master="yarn --deploy-mode cluster"
-	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part1" --class it.unimib.disco.summarization.export.CalculateMinimalTypes "hdfs://master:54310/home/summarization.jar" "$OntologyFile" "$orgDatasetFile" "$minTypeResult"
+	
+	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part1" --class it.unimib.disco.summarization.export.CalculateMinimalTypes $CONF $JAR "$OntologyFile" "$orgDatasetFile" "$minTypeResult"
 	if [ $? -ne 0 ]
 	then
 	    echo "App Failed during run"
 	    exit 1
 	fi
 
-	/home/fabio/Scrivania/hadoop/bin/hdfs dfs -put "/home/fabio/Scrivania/Stage/abstat/data/summaries" "hdfs://master:54310/home/fabio/Scrivania/Stage/abstat/data"
+	if [ "$master" == "yarn --deploy-mode cluster" ]
+	then
+		$HADOOP_HOME/bin/hdfs dfs -put "/home/fabio/Scrivania/Stage/abstat/data/summaries" "hdfs://master:54310/home/fabio/Scrivania/Stage/abstat/data"
+	fi
 
-	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part2" --class it.unimib.disco.summarization.export.AggregateConceptCounts "hdfs://master:54310/home/summarization.jar" "$minTypeResult" "$ResultsDirectory/patterns/"
+	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part2" --class it.unimib.disco.summarization.export.AggregateConceptCounts $CONF $JAR "$minTypeResult" "$ResultsDirectory/patterns/"
 
 	if [ $? -ne 0 ]
 	then
@@ -339,7 +366,7 @@ echo "---Start: Counting---"
 	    exit 1
 	fi
 
-	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part3" --class it.unimib.disco.summarization.export.ProcessDatatypeRelationAssertions "hdfs://master:54310/home/summarization.jar" "${orgDatasetFile}" "$minTypeResult" "$ResultsDirectory/patterns/"
+	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part3" --class it.unimib.disco.summarization.export.ProcessDatatypeRelationAssertions $CONF $JAR "${orgDatasetFile}" "$minTypeResult" "$ResultsDirectory/patterns/"
 
 	if [ $? -ne 0 ]
 	then
@@ -347,7 +374,7 @@ echo "---Start: Counting---"
 	    exit 1
 	fi
 
-	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part4" --class it.unimib.disco.summarization.export.ProcessObjectRelationAssertions "hdfs://master:54310/home/summarization.jar" "${orgDatasetFile}" "$minTypeResult" "$ResultsDirectory/patterns/"
+	eval ${dbgCmd}""$SPARK_HOME/bin/spark-submit --master $master --name "summarization_part4" --class it.unimib.disco.summarization.export.ProcessObjectRelationAssertions $CONF $JAR "${orgDatasetFile}" "$minTypeResult" "$ResultsDirectory/patterns/"
 
 	if [ $? -ne 0 ]
 	then

@@ -8,34 +8,26 @@ import java.util.Map.Entry;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
 
 public class ConceptCount {
 
-	HashMap<String, Long> conceptCounts = new HashMap<String, Long>();
+	private static Map<String, Long> conceptCounts = new HashMap<String, Long>();
 	private JavaSparkContext sc;
+	
 	
 	public ConceptCount(JavaSparkContext sc) {
 		this.sc = sc;
 	}
 	public ConceptCount process(File file) throws Exception {
 		InputFile counts = new TextInput(new FileSystemConnector(file));
-		/*while(counts.hasNextLine()){
-			String[] splitted = counts.nextLine().split("##");
-			String concept = splitted[0];
-			Long count = Long.parseLong(splitted[1]);
-			if(!conceptCounts.containsKey(concept)) conceptCounts.put(concept, 0l);
-			conceptCounts.put(concept, conceptCounts.get(concept) + count);
-		}
-		*/
 		
 		if(counts.hasNextLine()){
 			
 			String path = counts.name();
-			if(sc.master().equals("yarn-cluster"));
+			if(sc.master().equals("yarn-cluster"))
 				path = "hdfs://master:54310" + path;
 			
 			JavaRDD<String> lines = sc.textFile(path);
@@ -54,7 +46,7 @@ public class ConceptCount {
 			 * 
 			 */
 			private static final long serialVersionUID = 1L;
-
+			
 			public Tuple2<String, Long> call(String line) throws Exception {
 				String[] splitted = line.split("##");
 				String concept = splitted[0];
@@ -63,18 +55,6 @@ public class ConceptCount {
 			}
 			
 		});	
-		
-		conceptCounts = conceptCounts.reduceByKey(new Function2<Long, Long, Long>(){
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			public Long call(Long a, Long b) throws Exception {
-				return a + b;
-			}
-			
-		});
 		
 		return conceptCounts.collectAsMap();
 	}

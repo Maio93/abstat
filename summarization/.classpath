@@ -75,6 +75,6 @@
 	<classpathentry kind="lib" path="lib/commons-collections-3.2.2.jar"/>
 	<classpathentry kind="lib" path="lib/commons-configuration-1.6.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-log4j12-1.7.6.jar"/>
-	<classpathentry kind="lib" path="/home/fabio/Scrivania/Stage/abstat/spark/lib/spark-assembly-1.6.1-hadoop2.6.0.jar"/>
+	<classpathentry kind="lib" path="/home/fabio/Scrivania/spark/lib/spark-assembly-1.6.1-hadoop2.6.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

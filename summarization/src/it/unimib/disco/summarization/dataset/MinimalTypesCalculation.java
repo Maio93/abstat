@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -63,56 +62,25 @@ public class MinimalTypesCalculation implements Processing {
 
 		try {
 			String path = types.name();
-			if(sc.master().equals("yarn-cluster"))
+			if (sc.master().equals("yarn-cluster"))
 				path = "hdfs://master:54310" + path;
-			
-			
-			if (types.hasNextLine()) {				
-				JavaRDD<String> file =  sc.textFile(path);
+
+			if (types.hasNextLine()) {
+				JavaRDD<String> file = sc.textFile(path);
 				trackConcept(file, conceptCounts, externalConcepts);
-				Map<String, Iterable<HashSet<String>>> iterableMinimalTypes = trackMinimalType(file);
-				for(String key : iterableMinimalTypes.keySet()){
-					Iterable<HashSet<String>> hashset = iterableMinimalTypes.get(key);
-					minimalTypes.put(key, new HashSet<String>());
-					Iterator<HashSet<String>> itr = hashset.iterator();
-					while(itr.hasNext()){
-						HashSet<String> minimalType = itr.next();
-						if(!minimalTypes.get(key).isEmpty()){
-							for(String type: minimalType){
-								Boolean add = true;
-								HashSet<String> copy_minimalTypes = new HashSet<String>(minimalTypes.get(key));
-								for(String min_types : copy_minimalTypes){
-									if (!graph.pathsBetween(min_types, type).isEmpty()) {
-										add = false;
-										System.out.println("elemento non aggiunto");
-										break;
-									}
-									if (!graph.pathsBetween(type, min_types).isEmpty()) {
-										minimalTypes.get(key).remove(min_types);
-									}
-								}
-								if(add){
-									minimalTypes.get(key).add(type);
-									System.out.println("elemento aggiunto");
-								}
-							}
-						}
-						else
-							minimalTypes.put(key, minimalType);
-					}
-				}
+				minimalTypes = trackMinimalType(file);
 			}
 		} catch (Exception e) {
 			Events.summarization().error("error processing " + types.name(), e);
 		}
-		
+
 		String prefix = new Files().prefixOf(types);
 		writeConceptCounts(conceptCounts, targetDirectory, prefix);
 		writeExternalConcepts(externalConcepts, targetDirectory, prefix);
 		writeMinimalTypes(minimalTypes, targetDirectory, prefix);
 	}
 
-	private static Map<String, Iterable<HashSet<String>>> trackMinimalType(JavaRDD<String> file) {
+	private static Map<String, HashSet<String>> trackMinimalType(JavaRDD<String> file) {
 		/*
 		 * if (!minimalTypes.containsKey(entity)) minimalTypes.put(entity, new
 		 * HashSet<String>()); for (String minimalType : new
@@ -156,14 +124,48 @@ public class MinimalTypesCalculation implements Processing {
 			}
 
 		});
-					
 
-		JavaPairRDD<String,Iterable <HashSet<String>>> tmp = minimalTypes.groupByKey();
-		return tmp.collectAsMap();
+		minimalTypes = minimalTypes.reduceByKey(new Function2<HashSet<String>, HashSet<String>, HashSet<String>>() {
 
-		//return minimalTypes.collectAsMap();
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+			private TypeGraph graph = MinimalTypesCalculation.graph;
 
-	}	
+			@Override
+			public HashSet<String> call(HashSet<String> arg0, HashSet<String> arg1) throws Exception {
+
+				for (String argument1 : arg1) {
+					boolean add = true;
+					List<String> toDelete = new ArrayList<String>();
+					for (String argument0 : arg0) {
+						if (!graph.pathsBetween(argument0, argument1).isEmpty()) {
+							add = false;
+							break;
+						}
+						if (!graph.pathsBetween(argument1, argument0).isEmpty())
+							toDelete.add(argument0);
+					}
+					if (!toDelete.isEmpty()) {
+						for (String arg_del : toDelete) {
+							arg0.remove(arg_del);
+						}
+					}
+					if (add)
+						arg0.add(argument1);
+				}
+				return arg0;
+			}
+
+		});
+		// JavaPairRDD<String,Iterable <HashSet<String>>> tmp =
+		// minimalTypes.groupByKey();
+		// return tmp.collectAsMap();
+
+		return minimalTypes.collectAsMap();
+
+	}
 
 	private static void trackConcept(JavaRDD<String> file, HashMap<String, Integer> counts,
 			List<String> externalConcepts) {
@@ -172,42 +174,58 @@ public class MinimalTypesCalculation implements Processing {
 		 * counts.get(concept) + 1); }else{ externalConcepts.add(entity + "##" +
 		 * concept); }
 		 */
-		JavaPairRDD<String, Integer> pairs = file.mapToPair(new PairFunction<String, String, Integer>() {
+		JavaPairRDD<String, ArrayList<String>> pairs = file
+				.mapToPair(new PairFunction<String, String, ArrayList<String>>() {
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 1L;
+
+					public Tuple2<String, ArrayList<String>> call(String s) {
+						String concept = s.split("##")[2];
+						if (!concept.equals(OWL.Thing.getURI())) {
+							ArrayList<String> entity = new ArrayList<String>();
+							entity.add(s.split("##")[0]);
+							return new Tuple2<String, ArrayList<String>>(concept, entity);
+						}
+						return new Tuple2<String, ArrayList<String>>("", new ArrayList<String>());
+					}
+				});
+
+		pairs = pairs.filter(new Function<Tuple2<String, ArrayList<String>>, Boolean>() {
 			/**
 			 * 
 			 */
 			private static final long serialVersionUID = 1L;
 
-			public Tuple2<String, Integer> call(String s) {
-				return new Tuple2<String, Integer>(s, 1);
+			public Boolean call(Tuple2<String, ArrayList<String>> t) {
+				return !(t._1.equals(""));
 			}
+
 		});
 
-		JavaPairRDD<String, Integer> counts_pairs = pairs.reduceByKey(new Function2<Integer, Integer, Integer>() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
+		JavaPairRDD<String, ArrayList<String>> counts_pairs = pairs
+				.reduceByKey(new Function2<ArrayList<String>, ArrayList<String>, ArrayList<String>>() {
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 1L;
 
-			public Integer call(Integer a, Integer b) {
-				return a + b;
-			}
-		});
+					public ArrayList<String> call(ArrayList<String> a, ArrayList<String> b) {
+						a.addAll(b);
+						return a;
+					}
+				});
 
-		Map<String, Integer> tmp = counts_pairs.collectAsMap();
+		Map<String, ArrayList<String>> tmp = counts_pairs.collectAsMap();
 
-		for (String line : tmp.keySet()) {
-			String[] resources = line.split("##");
+		for (String concept : tmp.keySet()) {
 
-			String entity = resources[0];
-			String concept = resources[2];
-
-			if (!concept.equals(OWL.Thing.getURI())) {
-				if (counts.containsKey(concept)) {
-					counts.put(concept, tmp.get(line));
-				} else {
+			if (counts.containsKey(concept)) {
+				counts.put(concept, counts.get(concept) + tmp.get(concept).size());
+			} else {
+				for (String entity : tmp.get(concept))
 					externalConcepts.add(entity + "##" + concept);
-				}
 			}
 		}
 	}

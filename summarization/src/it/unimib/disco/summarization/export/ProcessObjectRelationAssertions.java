@@ -20,7 +20,7 @@ public class ProcessObjectRelationAssertions {
 		File akps = new File(new File(args[2]), "object-akp.txt");
 
 		SparkConf conf = new SparkConf();
-		JavaSparkContext sc = new JavaSparkContext(conf.setAppName("summarization").set("spark.hadoop.validateOutputSpecs", "true"));
+		JavaSparkContext sc = new JavaSparkContext(conf.setAppName("summarization"));
 		OverallObjectRelationsCounting counts = new OverallObjectRelationsCounting(properties, akps,
 				minimalTypesDirectory);
 		counts.setSc(sc);
